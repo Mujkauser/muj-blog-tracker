@@ -1,35 +1,40 @@
-const express = require("express");
-const axios = require("axios");
-const path = require("path");
+const fetch = require("node-fetch");
 
-const app = express();
-const PORT = process.env.PORT || 10000;
+async function getRedditPosts(username) {
+  const url = `https://www.reddit.com/user/${username}/submitted.json`;
 
-// Set EJS as the view engine
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-// Homepage → show Reddit posts
-app.get("/", async (req, res) => {
   try {
-    const response = await axios.get(
-      "https://www.reddit.com/user/FrontFaith74/submitted.json"
-    );
+    const res = await fetch(url, {
+      headers: { "User-Agent": "muj-blog-tracker/1.0" }
+    });
 
-    const posts = response.data.data.children.map((p) => ({
-      title: p.data.title,
-      url: p.data.url,
-      date: new Date(p.data.created_utc * 1000).toLocaleDateString(),
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    }
+
+    const json = await res.json();
+
+    // ✅ Safety check before accessing children
+    if (!json.data || !json.data.children) {
+      console.error("⚠️ Unexpected Reddit response:");
+      console.error(JSON.stringify(json, null, 2)); // pretty-print full JSON
+      throw new Error("Reddit response missing data.children");
+    }
+
+    return json.data.children.map(post => ({
+      title: post.data.title,
+      url: post.data.url,
+      score: post.data.score,
+      created: new Date(post.data.created_utc * 1000).toISOString()
     }));
 
-    res.render("redditPosts", { posts });
   } catch (err) {
     console.error("❌ Error fetching reddit posts:", err.message);
-    res.status(500).send("Error fetching reddit posts");
+    return [];
   }
-});
+}
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+// --- Test run ---
+getRedditPosts("FrontFaith74").then(posts =>
+  console.log("Fetched posts (first 2):", posts.slice(0, 2))
+);
