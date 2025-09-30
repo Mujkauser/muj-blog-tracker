@@ -4,48 +4,29 @@
   <meta charset="UTF-8">
   <title>My Reddit Posts</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background: #f9f9f9;
-    }
-    h1 {
-      color: #e44d26;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    li {
-      margin-bottom: 1rem;
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    a {
-      font-weight: bold;
-      color: #0079d3;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .date {
-      color: gray;
-      font-size: 0.9rem;
-    }
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f9f9f9; }
+    h1 { color: #e44d26; }
+    ul { list-style-type: none; padding: 0; }
+    li { margin-bottom: 1rem; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    a { font-weight: bold; color: #0079d3; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .date { color: gray; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <h1>📜 My Reddit Posts</h1>
-  <ul>
-    <% redditPosts.forEach(post => { %>
-      <li>
-        <a href="<%= post.url %>" target="_blank"><%= post.title %></a>
-        <div class="date">Posted on <%= new Date(post.created).toLocaleString() %></div>
-      </li>
-    <% }) %>
-  </ul>
+  <h1>🌸 My Latest Reflections on Reddit 🌸</h1>
+
+  <% if (!redditPosts || redditPosts.length === 0) { %>
+    <p>Could not load posts.</p>
+  <% } else { %>
+    <ul>
+      <% redditPosts.forEach(post => { %>
+        <li>
+          <a href="<%= post.url %>" target="_blank"><%= post.title %></a>
+          <div class="date">Posted on <%= new Date(post.created).toLocaleString() %></div>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
 </body>
 </html>
