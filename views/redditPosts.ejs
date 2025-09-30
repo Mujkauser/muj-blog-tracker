@@ -1,33 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My Reddit Posts</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; }
-        ul { list-style-type: none; padding: 0; }
-        li { margin-bottom: 25px; border-bottom: 1px solid #ccc; padding-bottom: 15px; }
-        small { color: gray; }
-        form { margin-bottom: 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>My Reddit Posts</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #e44d26;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 1rem;
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    a {
+      font-weight: bold;
+      color: #0079d3;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .date {
+      color: gray;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-    <h1>My Reddit Posts</h1>
-
-    <form action="/reddit-posts/search" method="get">
-        <input type="text" name="q" placeholder="Search posts" value="<%= query %>">
-        <button type="submit">Search</button>
-    </form>
-
-    <ul>
+  <h1>📜 My Reddit Posts</h1>
+  <ul>
     <% posts.forEach(post => { %>
-        <li>
-            <a href="<%= post.url %>" target="_blank"><%= post.title %></a>
-            <br>
-            <small>Posted on <%= post.date.toDateString() %> in r/<%= post.subreddit %></small>
-            <p><%= post.content %></p>
-        </li>
+      <li>
+        <a href="<%= post.url %>" target="_blank"><%= post.title %></a>
+        <div class="date">Posted on <%= post.date %></div>
+      </li>
     <% }) %>
-    </ul>
+  </ul>
 </body>
 </html>
