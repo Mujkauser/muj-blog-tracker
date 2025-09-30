@@ -2,9 +2,9 @@
   "name": "muj-blog",
   "version": "1.0.0",
   "description": "Hersparklingqalb Blog with Reddit integration",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node index.js",
     "build": "npm run build"
   },
   "dependencies": {
