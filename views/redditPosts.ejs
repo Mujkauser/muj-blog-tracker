@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Reddit Posts</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin-bottom: 25px; border-bottom: 1px solid #ccc; padding-bottom: 15px; }
+        small { color: gray; }
+        form { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>My Reddit Posts</h1>
+
+    <form action="/reddit-posts/search" method="get">
+        <input type="text" name="q" placeholder="Search posts" value="<%= query %>">
+        <button type="submit">Search</button>
+    </form>
+
+    <ul>
+    <% posts.forEach(post => { %>
+        <li>
+            <a href="<%= post.url %>" target="_blank"><%= post.title %></a>
+            <br>
+            <small>Posted on <%= post.date.toDateString() %> in r/<%= post.subreddit %></small>
+            <p><%= post.content %></p>
+        </li>
+    <% }) %>
+    </ul>
+</body>
+</html>
