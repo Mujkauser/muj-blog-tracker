@@ -6,7 +6,6 @@ const PORT = process.env.PORT || 10000;
 
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
-app.use(express.static(__dirname + "/public"));
 
 app.get("/", async (req, res) => {
   const redditPosts = await getRedditPosts("FrontFaith74"); // full posts
@@ -14,3 +13,4 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
