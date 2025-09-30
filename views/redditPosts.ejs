@@ -40,10 +40,10 @@
 <body>
   <h1>📜 My Reddit Posts</h1>
   <ul>
-    <% posts.forEach(post => { %>
+    <% redditPosts.forEach(post => { %>
       <li>
         <a href="<%= post.url %>" target="_blank"><%= post.title %></a>
-        <div class="date">Posted on <%= post.date %></div>
+        <div class="date">Posted on <%= new Date(post.created).toLocaleString() %></div>
       </li>
     <% }) %>
   </ul>
