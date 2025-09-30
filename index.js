@@ -12,7 +12,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Replace this with your Reddit username
-const REDDIT_USERNAME = 'LTdnPPNOYruUBOcWeDfoGQ';
+const REDDIT_USERNAME = 'FrontFaith74';
 
 // Function to fetch Reddit posts
 async function fetchRedditPosts(username) {
@@ -64,3 +64,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
