@@ -3,87 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Muj's Blog</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <title>Muj’s Reflections</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap" rel="stylesheet">
   <style>
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
       font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f9f9f9;
+      background: #fef9f6;
       color: #333;
+      line-height: 1.6;
     }
 
+    a { color: #2c7a78; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
     header {
-      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-      padding: 50px 20px;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      padding: 60px 20px 40px;
       text-align: center;
-      color: white;
+      color: #2c3e50;
     }
-
     header h1 {
-      margin: 0;
-      font-size: 2.5em;
+      font-family: 'Merriweather', serif;
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto;
     }
 
-    main {
-      max-width: 800px;
-      margin: 30px auto;
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
       padding: 0 20px;
     }
 
-    .post-card {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
+    /* About / Mission */
+    .mission {
+      background: #fff4f0;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 40px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .mission h2 {
+      font-family: 'Merriweather', serif;
+      color: #d1495b;
+      margin-bottom: 15px;
     }
 
+    /* Posts */
+    .posts {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    .post-card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
     .post-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    }
+    .post-card h3 {
+      color: #2c7a78;
+      margin-bottom: 10px;
+    }
+    .post-card p {
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+    .post-card span {
+      font-size: 0.85rem;
+      color: #666;
     }
 
-    .post-card a {
-      color: #3498db;
-      text-decoration: none;
-      font-weight: 500;
+    /* Reflections */
+    .reflection {
+      background: #e0f7fa;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 40px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      font-style: italic;
     }
 
-    .post-card a:hover {
-      text-decoration: underline;
-    }
-
+    /* Footer */
     footer {
       text-align: center;
-      padding: 20px;
-      color: #666;
-      font-size: 0.9em;
+      padding: 25px 20px;
+      background: #d3f8e2;
+      border-top: 1px solid #ccc;
+      color: #2c3e50;
+      font-size: 0.9rem;
+    }
+
+    @media(min-width: 600px){
+      .posts {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 <body>
+
+  <!-- Header -->
   <header>
-    <h1>Welcome to Muj's Blog</h1>
-    <p>Exploring thoughts, reflections, and more!</p>
+    <h1>Muj’s Reflections</h1>
+    <p>Sharing thoughts, dawah, and the light of Qur’an & Sunnah. Dreams of fostering orphans and spreading love.</p>
   </header>
 
-  <main>
-    <div class="post-card">
-      <h2>Reddit Post: The Best Time for Dua</h2>
-      <p>Check out my thoughts on dua and timing. <a href="https://www.reddit.com/user/FrontFaith74/comments/1ntgnqu/the_best_time_for_dua/">Read more</a></p>
-    </div>
+  <div class="container">
 
-    <div class="post-card">
-      <h2>Reddit Post: Gift in Hardship</h2>
-      <p>Reflections on finding gifts during tough times. <a href="https://www.reddit.com/user/FrontFaith74/comments/1nr51iu/that_was_the_gift_in_the_hardship/">Read more</a></p>
-    </div>
-  </main>
+    <!-- Mission / About -->
+    <section class="mission">
+      <h2>My Mission</h2>
+      <p>Assalamu Alaikum! I am Muj. My dream is to foster orphans, share knowledge of Islam, and inspire others through dawah and reflections from the Qur’an and Sunnah. This blog is my little space to share my heart, my thoughts, and my journey.</p>
+    </section>
+
+    <!-- Latest Posts -->
+    <section class="posts">
+      <div class="post-card">
+        <h3>Post Title 1</h3>
+        <p>Short excerpt from the post…</p>
+        <span>Sep 30, 2025</span>
+      </div>
+      <div class="post-card">
+        <h3>Post Title 2</h3>
+        <p>Another short excerpt from your post…</p>
+        <span>Sep 29, 2025</span>
+      </div>
+    </section>
+
+    <!-- Reflections -->
+    <section class="reflection">
+      <p>“And whoever saves one [life] – it is as if he had saved mankind entirely.” – Qur’an 5:32</p>
+    </section>
+
+  </div>
 
   <footer>
-    &copy; 2025 Muj. All rights reserved.
+    &copy; 2025 Muj’s Reflections | Follow my journey
   </footer>
+
 </body>
 </html>
