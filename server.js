@@ -9,9 +9,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Reddit app credentials
-const CLIENT_ID = process.env.REDDIT_CLIENT_ID || "LTdnPPNOYruUBOcWeDfoGQ";
-const SECRET = process.env.REDDIT_SECRET || "t10Y_u4vkY2D3oHo9KcJuJ8dbCzAqg";
+// Reddit app credentials (set in Render environment variables)
+const CLIENT_ID = process.env.REDDIT_CLIENT_ID;
+const SECRET = process.env.REDDIT_SECRET;
 const USER_AGENT = "hersparklingqalb-blog/0.1 by FrontFaith74";
 const REDDIT_USERNAME = "FrontFaith74";
 
