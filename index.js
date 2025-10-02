@@ -79,13 +79,22 @@ app.get("/reddit-posts", async (req, res) => {
     }
 
     const posts = await response.json();
-    redditPosts = posts.data.children.map(p => ({
-      title: p.data.title,
-      url: p.data.url,
-      created: p.data.created_utc
-    }));
 
-    res.json(redditPosts);
+    // Wrap in data.children to mimic old Reddit API format
+    const formattedPosts = {
+      data: {
+        children: posts.data.children.map(p => ({
+          data: {
+            title: p.data.title,
+            permalink: p.data.permalink,
+            selftext: p.data.selftext,
+            created_utc: p.data.created_utc
+          }
+        }))
+      }
+    };
+
+    res.json(formattedPosts);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not fetch Reddit posts" });
@@ -178,5 +187,6 @@ app.get("/admin/delete-post/:id", (req, res) => {
 
 // --- Start server ---
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 
