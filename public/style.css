@@ -1,0 +1,25 @@
+#blogs .posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.post-card {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  transition: transform 0.2s;
+}
+
+.post-card:hover {
+  transform: scale(1.03);
+}
+
+/* Highlight first 3 posts */
+.post-card.highlighted {
+  grid-column: span 2;
+  font-size: 1.1rem;
+  background: #fef6fa;
+  border: 2px solid #f3c5d3;
+}
