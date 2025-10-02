@@ -1,6 +1,7 @@
 {
   "name": "muj-blog",
   "version": "1.0.0",
+  "type": "module",
   "description": "Hersparklingqalb Blog with Reddit integration",
   "main": "index.js",
   "scripts": {
@@ -14,9 +15,9 @@
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22",
-    "type": "module"
+    "nodemon": "^2.0.22"
   }
 }
+
 
 
