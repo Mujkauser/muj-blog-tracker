@@ -1,77 +1,117 @@
-require('dotenv').config();
-const express = require("express");
-const session = require("express-session");
-const axios = require("axios");
-const qs = require("querystring");
-const morgan = require("morgan");
+import express from "express";
+import fetch from "node-fetch";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-// Use environment variables instead of hardcoding
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI;
-app.use(morgan("combined")); // logs all requests to console
+const PORT = process.env.PORT || 10000;
 
-app.use(session({ secret: "muj-secret", resave: false, saveUninitialized: true }));
+// Reddit app credentials
+const CLIENT_ID = process.env.REDDIT_CLIENT_ID;
+const SECRET = process.env.REDDIT_SECRET;
+const USER_AGENT = "hersparklingqalb-blog/0.1 by FrontFaith74";
+const REDDIT_USERNAME = "FrontFaith74";
 
-// Step 2a: Redirect user to Reddit for authorization
-app.get("/reddit/login", (req, res) => {
-  const state = Math.random().toString(36).substring(2);
-  req.session.state = state;
+// Admin secret
+const ADMIN_KEY = process.env.ADMIN_KEY;
 
-  const authURL = `https://www.reddit.com/api/v1/authorize?client_id=${CLIENT_ID}&response_type=code&state=${state}&redirect_uri=${REDIRECT_URI}&duration=permanent&scope=read identity`;
-  res.redirect(authURL);
+if (!CLIENT_ID || !SECRET || !ADMIN_KEY) {
+  console.error("Missing environment variables. Check your .env file!");
+  process.exit(1);
+}
+
+// Serve static frontend
+app.use(express.static(path.join(__dirname, "public")));
+
+// --- Visitor analytics (in-memory) ---
+const pageviews = {};
+
+app.use((req, res, next) => {
+  pageviews[req.path] = (pageviews[req.path] || 0) + 1;
+  next();
 });
 
-// Step 2b: Callback to exchange code for access token
-app.get("/reddit/callback", async (req, res) => {
-  if (req.query.state !== req.session.state) return res.send("Invalid state");
+// --- Reddit token handling ---
+let accessToken = "";
+let tokenExpiry = 0;
 
-  const tokenResponse = await axios.post(
-    "https://www.reddit.com/api/v1/access_token",
-    qs.stringify({
-      grant_type: "authorization_code",
-      code: req.query.code,
-      redirect_uri: REDIRECT_URI
-    }),
-    {
-      auth: { username: CLIENT_ID, password: CLIENT_SECRET },
-      headers: { "Content-Type": "application/x-www-form-urlencoded" }
-    }
-  );
+async function getToken() {
+  const now = Date.now();
+  if (accessToken && now < tokenExpiry) return accessToken;
 
-  req.session.access_token = tokenResponse.data.access_token;
-  res.redirect("/reddit/posts");
-});
-
-// Step 2c: Fetch and display your Reddit posts
-app.get("/reddit/posts", async (req, res) => {
-  if (!req.session.access_token) return res.redirect("/reddit/login");
-
-  const postsResponse = await axios.get("https://oauth.reddit.com/user/FrontFaith74/submitted", {
-    headers: { Authorization: `bearer ${req.session.access_token}`, "User-Agent": "HersparklingqalbBlog/0.1" }
+  const resp = await fetch("https://www.reddit.com/api/v1/access_token", {
+    method: "POST",
+    headers: {
+      "Authorization": "Basic " + Buffer.from(`${CLIENT_ID}:${SECRET}`).toString("base64"),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials"
   });
 
-  res.send(postsResponse.data.data.children.map(p => `<li><a href="${p.data.url}">${p.data.title}</a></li>`).join(""));
+  const data = await resp.json();
+  accessToken = data.access_token;
+  tokenExpiry = now + (data.expires_in - 60) * 1000; // 60s buffer
+  return accessToken;
+}
+
+// --- Reddit posts route ---
+let redditPosts = [];
+
+app.get("/reddit-posts", async (req, res) => {
+  try {
+    const token = await getToken();
+    const response = await fetch(`https://oauth.reddit.com/user/${REDDIT_USERNAME}/submitted`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "User-Agent": USER_AGENT
+      }
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return res.status(response.status).json({ error: text });
+    }
+
+    const posts = await response.json();
+    redditPosts = posts.data.children.map(p => ({
+      title: p.data.title,
+      url: p.data.url,
+      created: p.data.created_utc
+    }));
+
+    res.json(redditPosts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not fetch Reddit posts" });
+  }
 });
 
-
-// --- Admin Dashboard routes start here ---
+// --- Admin Dashboard ---
 app.get("/admin", (req, res) => {
-  if (req.query.key !== process.env.ADMIN_KEY) return res.send("Unauthorized");
+  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
 
   res.send(`
     <h1>Admin Dashboard</h1>
     <ul>
-      <li><a href="/reddit/posts">View Reddit Posts</a></li>
+      <li><a href="/reddit-posts">View Reddit Posts</a></li>
       <li><a href="/admin/analytics">View Visitor Analytics</a></li>
+      <li><a href="/admin/moderation">Moderate Posts</a></li>
     </ul>
   `);
 });
 
+// --- Analytics page ---
 app.get("/admin/analytics", (req, res) => {
-  if (req.query.key !== process.env.ADMIN_KEY) return res.send("Unauthorized");
+  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
+
+  const labels = Object.keys(pageviews);
+  const data = Object.values(pageviews);
 
   res.send(`
     <h1>Visitor Analytics</h1>
@@ -81,18 +121,33 @@ app.get("/admin/analytics", (req, res) => {
       const ctx = document.getElementById('analyticsChart').getContext('2d');
       const chart = new Chart(ctx, {
           type: 'line',
-          data: { labels: ['Jan', 'Feb'], datasets: [{ label: 'Pageviews', data: [10, 20] }] },
+          data: { labels: ${JSON.stringify(labels)}, datasets: [{ label: 'Pageviews', data: ${JSON.stringify(data)} }] },
       });
     </script>
   `);
 });
 
-// Optional: Content moderation
-app.get("/admin/delete-post/:id", (req, res) => {
-  // delete post from DB or memory
-  res.send(`Post ${req.params.id} deleted!`);
-});
-// --- Admin Dashboard routes end here ---
+// --- Moderation page ---
+app.get("/admin/moderation", (req, res) => {
+  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
 
-// Start server
-app.listen(3000, () => console.log("Server running on port 3000"));
+  res.send(`
+    <h1>Moderate Reddit Posts</h1>
+    <ul>
+      ${redditPosts.map((p, i) => `<li>${p.title} - <a href="/admin/delete-post/${i}?key=${ADMIN_KEY}">Delete</a></li>`).join("")}
+    </ul>
+  `);
+});
+
+app.get("/admin/delete-post/:id", (req, res) => {
+  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
+
+  const index = parseInt(req.params.id);
+  if (!redditPosts[index]) return res.send("Post not found");
+  const removed = redditPosts.splice(index, 1);
+
+  res.send(`Deleted post: ${removed[0].title} <a href="/admin/moderation?key=${ADMIN_KEY}">Back</a>`);
+});
+
+// --- Start server ---
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
