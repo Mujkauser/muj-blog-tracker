@@ -104,6 +104,7 @@ app.get("/reddit-posts", async (req, res) => {
       }
     };
 
+    redditPosts = formattedPosts.data.children; // <-- populate moderation array
     res.json(formattedPosts);
   } catch (err) {
     console.error(err);
