@@ -80,17 +80,18 @@ app.get("/reddit-posts", async (req, res) => {
 
     const posts = await response.json();
 
-    // Wrap in data.children to mimic old Reddit API format
+    // Save posts for admin moderation
+    redditPosts = posts.data.children.map(p => ({
+      title: p.data.title,
+      permalink: p.data.permalink,
+      selftext: p.data.selftext,
+      created_utc: p.data.created_utc
+    }));
+
+    // Wrap in data.children to mimic old Reddit API format for frontend
     const formattedPosts = {
       data: {
-        children: posts.data.children.map(p => ({
-          data: {
-            title: p.data.title,
-            permalink: p.data.permalink,
-            selftext: p.data.selftext,
-            created_utc: p.data.created_utc
-          }
-        }))
+        children: redditPosts.map(p => ({ data: p }))
       }
     };
 
@@ -100,93 +101,4 @@ app.get("/reddit-posts", async (req, res) => {
     res.status(500).json({ error: "Could not fetch Reddit posts" });
   }
 });
-
-// --- Admin Dashboard ---
-app.get("/admin", (req, res) => {
-  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
-
-  res.send(`
-    <h1>Admin Dashboard</h1>
-    <ul>
-      <li><a href="/reddit-posts">View Reddit Posts</a></li>
-      <li><a href="/admin/analytics">View Visitor Analytics</a></li>
-      <li><a href="/admin/moderation">Moderate Posts</a></li>
-    </ul>
-  `);
-});
-
-// --- Admin logs page ---
-app.get("/admin/logs", (req, res) => {
-  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
-
-  const rows = Object.entries(pageviews)
-    .map(([path, count]) => `<tr><td>${path}</td><td>${count}</td></tr>`)
-    .join("");
-
-  res.send(`
-    <h1>Visitor Logs</h1>
-    <table border="1" cellpadding="5" cellspacing="0">
-      <thead>
-        <tr>
-          <th>Path</th>
-          <th>Pageviews</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows || "<tr><td colspan='2'>No logs yet</td></tr>"}
-      </tbody>
-    </table>
-    <p><a href="/admin?key=${ADMIN_KEY}">Back to Admin Dashboard</a></p>
-  `);
-});
-
-
-
-// --- Analytics page ---
-app.get("/admin/analytics", (req, res) => {
-  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
-
-  const labels = Object.keys(pageviews);
-  const data = Object.values(pageviews);
-
-  res.send(`
-    <h1>Visitor Analytics</h1>
-    <canvas id="analyticsChart"></canvas>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      const ctx = document.getElementById('analyticsChart').getContext('2d');
-      const chart = new Chart(ctx, {
-          type: 'line',
-          data: { labels: ${JSON.stringify(labels)}, datasets: [{ label: 'Pageviews', data: ${JSON.stringify(data)} }] },
-      });
-    </script>
-  `);
-});
-
-// --- Moderation page ---
-app.get("/admin/moderation", (req, res) => {
-  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
-
-  res.send(`
-    <h1>Moderate Reddit Posts</h1>
-    <ul>
-      ${redditPosts.map((p, i) => `<li>${p.title} - <a href="/admin/delete-post/${i}?key=${ADMIN_KEY}">Delete</a></li>`).join("")}
-    </ul>
-  `);
-});
-
-app.get("/admin/delete-post/:id", (req, res) => {
-  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
-
-  const index = parseInt(req.params.id);
-  if (!redditPosts[index]) return res.send("Post not found");
-  const removed = redditPosts.splice(index, 1);
-
-  res.send(`Deleted post: ${removed[0].title} <a href="/admin/moderation?key=${ADMIN_KEY}">Back</a>`);
-});
-
-// --- Start server ---
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
 
