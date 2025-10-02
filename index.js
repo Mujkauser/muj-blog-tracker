@@ -109,8 +109,28 @@ app.get("/admin", (req, res) => {
 // --- Admin logs page ---
 app.get("/admin/logs", (req, res) => {
   if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
-  res.send(JSON.stringify(pageviews, null, 2)); // simple example
+
+  const rows = Object.entries(pageviews)
+    .map(([path, count]) => `<tr><td>${path}</td><td>${count}</td></tr>`)
+    .join("");
+
+  res.send(`
+    <h1>Visitor Logs</h1>
+    <table border="1" cellpadding="5" cellspacing="0">
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Pageviews</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows || "<tr><td colspan='2'>No logs yet</td></tr>"}
+      </tbody>
+    </table>
+    <p><a href="/admin?key=${ADMIN_KEY}">Back to Admin Dashboard</a></p>
+  `);
 });
+
 
 
 // --- Analytics page ---
@@ -158,4 +178,5 @@ app.get("/admin/delete-post/:id", (req, res) => {
 
 // --- Start server ---
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
