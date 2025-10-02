@@ -9,85 +9,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Merriweather:wght@700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet">
 
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="/style.css">
+
   <!-- Font Awesome for social icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: #fef9f6;
-      color: #333;
-      line-height: 1.6;
-    }
-
-    a { color:#2c7a78; text-decoration:none; }
-    a:hover { text-decoration:underline; }
-
-    header {
-      background: linear-gradient(135deg, #a8edea, #fed6e3);
-      padding: 30px 20px;
-      text-align:center;
-      color:#2c3e50;
-      position:sticky;
-      top:0;
-      z-index:1000;
-    }
-    header h1 {
-      font-family:'Merriweather', serif;
-      font-size:2.5rem;
-      margin-bottom:5px;
-    }
-    nav a {
-      margin: 0 15px;
-      font-weight:500;
-    }
-
-    .container { max-width: 900px; margin: 40px auto; padding:0 20px; }
-
-    /* Sections */
-    section { margin-bottom:50px; }
-
-    /* Purpose / Dream */
-    #about {
-      background:#fff4f0; padding:40px; border-radius:15px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.05);
-      text-align:center;
-    }
-    #about h2 { font-family:'Merriweather', serif; color:#d1495b; margin-bottom:20px; }
-    #about p { font-size:1.1rem; max-width:800px; margin:15px auto; color:#34495e; }
-    #about .quran { font-family:'Amiri Quran', serif; font-size:1.8rem; line-height:2; color:#2c3e50; margin-bottom:25px; }
-
-    /* Posts */
-    .posts { display:grid; grid-template-columns:1fr; gap:20px; }
-    .post-card {
-      background:#ffffff; padding:20px; border-radius:15px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.05);
-      transition: transform 0.2s;
-    }
-    .post-card:hover { transform:translateY(-5px); }
-    .post-card h3 { color:#2c7a78; margin-bottom:10px; }
-    .post-card p { font-size:0.95rem; margin-bottom:10px; }
-    .post-card span { font-size:0.85rem; color:#666; }
-
-    /* Reflections */
-    .reflection {
-      background:#e0f7fa; padding:25px; border-radius:15px; margin-bottom:40px;
-      box-shadow:0 5px 15px rgba(0,0,0,0.05); font-style:italic;
-      text-align:center;
-    }
-
-    /* Social */
-    .social-links a { margin:0 10px; color:#2c3e50; transition:0.3s; }
-    .social-links a:hover { color:#d1495b; }
-
-    /* Footer */
-    footer { text-align:center; padding:25px 20px; background:#d3f8e2; border-top:1px solid #ccc; color:#2c3e50; font-size:0.9rem; }
-
-    @media(min-width:600px){ .posts { grid-template-columns:1fr 1fr; } }
-  </style>
 </head>
 <body>
 
@@ -117,16 +43,7 @@
     <section id="blogs">
       <h2 style="text-align:center; color:#d1495b; margin-bottom:25px;">All My Blogs</h2>
       <div class="posts">
-        <div class="post-card">
-          <h3>Blog Post Title 1</h3>
-          <p>Excerpt or intro…</p>
-          <span>Sep 28, 2025</span>
-        </div>
-        <div class="post-card">
-          <h3>Blog Post Title 2</h3>
-          <p>Excerpt or intro…</p>
-          <span>Sep 27, 2025</span>
-        </div>
+        <!-- Posts populated dynamically via JS -->
       </div>
     </section>
 
@@ -161,14 +78,18 @@ async function populateAllBlogs() {
     const res = await fetch("/reddit-posts");
     const data = await res.json();
     const blogsContainer = document.querySelector("#blogs .posts");
-    blogsContainer.innerHTML = ""; // clear static cards
+    blogsContainer.innerHTML = ""; // clear previous
 
-    data.data.children.forEach(post => {
+    data.data.children.forEach((post, index) => {
       const { title, permalink, selftext, created_utc } = post.data;
       const date = new Date(created_utc * 1000).toLocaleDateString();
 
       const postCard = document.createElement("div");
       postCard.className = "post-card";
+
+      // Highlight first 3 posts
+      if (index < 3) postCard.classList.add("highlighted");
+
       postCard.innerHTML = `
         <h3><a href="https://reddit.com${permalink}" target="_blank">${title}</a></h3>
         <p>${selftext ? selftext.slice(0, 120) + "..." : ""}</p>
@@ -177,11 +98,10 @@ async function populateAllBlogs() {
       blogsContainer.appendChild(postCard);
     });
   } catch (err) {
-    console.error("Failed to load Reddit posts for All Blogs:", err);
+    console.error("Failed to load Reddit posts:", err);
   }
 }
 
-// Call it for the All Blogs section
 populateAllBlogs();
 </script>
 
