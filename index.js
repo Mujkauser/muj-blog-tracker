@@ -7,9 +7,10 @@ const morgan = require("morgan");
 
 
 const app = express();
-const CLIENT_ID = "YOUR_CLIENT_ID";
-const CLIENT_SECRET = "YOUR_CLIENT_SECRET";
-const REDIRECT_URI = "https://hersparklingqalb-blog.onrender.com/reddit/callback"; // Update for your live URL
+// Use environment variables instead of hardcoding
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
 app.use(morgan("combined")); // logs all requests to console
 
 app.use(session({ secret: "muj-secret", resave: false, saveUninitialized: true }));
