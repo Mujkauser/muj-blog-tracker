@@ -1,25 +1,86 @@
-#blogs .posts {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
+/* Reset & base */
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: #fef9f6;
+  color: #333;
+  line-height: 1.6;
 }
 
+a { color:#2c7a78; text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* Header */
+header {
+  background: linear-gradient(135deg, #a8edea, #fed6e3);
+  padding: 30px 20px;
+  text-align:center;
+  color:#2c3e50;
+  position:sticky;
+  top:0;
+  z-index:1000;
+}
+header h1 {
+  font-family:'Merriweather', serif;
+  font-size:2.5rem;
+  margin-bottom:5px;
+}
+nav a { margin: 0 15px; font-weight:500; }
+
+/* Container */
+.container { max-width: 900px; margin: 40px auto; padding:0 20px; }
+
+/* Sections */
+section { margin-bottom:50px; }
+
+/* About / Purpose */
+#about {
+  background:#fff4f0; padding:40px; border-radius:15px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
+  text-align:center;
+}
+#about h2 { font-family:'Merriweather', serif; color:#d1495b; margin-bottom:20px; }
+#about p { font-size:1.1rem; max-width:800px; margin:15px auto; color:#34495e; }
+#about .quran { font-family:'Amiri Quran', serif; font-size:1.8rem; line-height:2; color:#2c3e50; margin-bottom:25px; }
+
+/* Posts */
+.posts { display:grid; grid-template-columns:1fr; gap:20px; }
 .post-card {
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  background: #fff;
+  background:#ffffff; padding:20px; border-radius:15px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05);
   transition: transform 0.2s;
 }
-
-.post-card:hover {
-  transform: scale(1.03);
-}
+.post-card:hover { transform:translateY(-5px); }
+.post-card h3 { color:#2c7a78; margin-bottom:10px; }
+.post-card p { font-size:0.95rem; margin-bottom:10px; }
+.post-card span { font-size:0.85rem; color:#666; }
 
 /* Highlight first 3 posts */
 .post-card.highlighted {
   grid-column: span 2;
-  font-size: 1.1rem;
-  background: #fef6fa;
-  border: 2px solid #f3c5d3;
+  font-size:1.1rem;
+  background:#fff0f5;
+  border:2px solid #f3c5d3;
+}
+
+/* Reflections */
+.reflection {
+  background:#e0f7fa; padding:25px; border-radius:15px; margin-bottom:40px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.05); font-style:italic;
+  text-align:center;
+}
+
+/* Social */
+.social-links a { margin:0 10px; color:#2c3e50; transition:0.3s; }
+.social-links a:hover { color:#d1495b; }
+
+/* Footer */
+footer { text-align:center; padding:25px 20px; background:#d3f8e2; border-top:1px solid #ccc; color:#2c3e50; font-size:0.9rem; }
+
+/* Responsive grid */
+@media(min-width:600px){ 
+  .posts { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .post-card.highlighted { grid-column: span 2; }
 }
