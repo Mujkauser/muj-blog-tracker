@@ -17,92 +17,119 @@
 </head>
 <body>
 
-  <!-- Header / Navigation -->
-  <header>
-    <h1>Deen & Dreams</h1>
-    <nav>
-      <a href="#home">Home</a>
-      <a href="#about">About</a>
-      <a href="#writing">Read My Writing</a>
-      <a href="#blogs">All My Blogs</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
+<header>
+  <h1>Deen & Dreams</h1>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#about">About</a>
+    <a href="#writing">Read My Writing</a>
+    <a href="#blogs">All My Blogs</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
 
-  <div class="container" id="home">
-    <!-- About / Purpose -->
-    <section id="about">
-      <h2>My Purpose & Dream</h2>
-      <p class="quran">وَٱصْطَنَعْتُكَ لِنَفْسِى ٤١</p>
-      <p>This verse inspires me deeply: I feel like I was born to serve Allah <strong>(SWT)</strong> beyond my obligatory duties. My heart longs to do something meaningful for the Ummah, to contribute in ways that benefit others and earn Allah's pleasure.</p>
-      <p>Whether it is <strong>fostering orphans</strong>, <strong>supporting Dawah</strong>, or helping others in need, I want my life to be a continuous act of worship, like giving a “loan to Allah” that returns multiplied in the Akhirah.</p>
-      <p>Every small act done sincerely for Him—sharing knowledge, spreading kindness, or lifting someone’s burden—is my way of striving for Jannah and fulfilling the purpose Allah <strong>(SWT)</strong> placed me on this earth for.</p>
-    </section>
+<div class="container" id="home">
 
-    <!-- All Blogs -->
-    <section id="blogs">
-      <h2 style="text-align:center; color:#d1495b; margin-bottom:25px;">All My Blogs</h2>
-      <div class="posts">
-        <!-- Posts populated dynamically via JS -->
-      </div>
-    </section>
+  <section id="about">
+    <h2>My Purpose & Dream</h2>
+    <p class="quran">وَٱصْطَنَعْتُكَ لِنَفْسِى ٤١</p>
+    <p>This verse inspires me deeply: I feel like I was born to serve Allah <strong>(SWT)</strong> beyond my obligatory duties. My heart longs to do something meaningful for the Ummah, to contribute in ways that benefit others and earn Allah's pleasure.</p>
+    <p>Whether it is <strong>fostering orphans</strong>, <strong>supporting Dawah</strong>, or helping others in need, I want my life to be a continuous act of worship, like giving a “loan to Allah” that returns multiplied in the Akhirah.</p>
+    <p>Every small act done sincerely for Him—sharing knowledge, spreading kindness, or lifting someone’s burden—is my way of striving for Jannah and fulfilling the purpose Allah <strong>(SWT)</strong> placed me on this earth for.</p>
+  </section>
 
-    <!-- Reflections -->
-    <section class="reflection">
-      <p>“And whoever saves one [life] – it is as if he had saved mankind entirely.” – Qur’an 5:32</p>
-    </section>
+  <section id="blogs">
+    <h2 style="text-align:center; color:#d1495b; margin-bottom:25px;">All My Blogs</h2>
+    <div class="posts">
+      <!-- Posts populated dynamically via JS -->
+    </div>
+    <div id="pagination" style="text-align:center; margin-top:20px;"></div>
+  </section>
 
-    <!-- Contact / Social -->
-    <section id="contact" style="text-align:center; margin-bottom:50px;">
-      <h2 style="color:#2c3e50; margin-bottom:20px;">Connect with Me</h2>
-      <div class="social-links">
-        <a href="https://www.youtube.com/@Hersparklingqalb" target="_blank"><i class="fab fa-youtube fa-2x"></i></a>
-        <a href="https://www.instagram.com/hersparklinggqalb/" target="_blank"><i class="fab fa-instagram fa-2x"></i></a>
-        <a href="https://www.tumblr.com/blog/hersparklinggqalb" target="_blank"><i class="fab fa-tumblr fa-2x"></i></a>
-        <a href="https://in.pinterest.com/Hersparklinggqalb/" target="_blank"><i class="fab fa-pinterest fa-2x"></i></a>
-        <a href="https://www.reddit.com/user/FrontFaith74/" target="_blank"><i class="fab fa-reddit fa-2x"></i></a>
-        <a href="mailto:hersparklinggqalb@gmail.com"><i class="fas fa-envelope fa-2x"></i></a>
-      </div>
-    </section>
+  <section class="reflection">
+    <p>“And whoever saves one [life] – it is as if he had saved mankind entirely.” – Qur’an 5:32</p>
+  </section>
 
-  </div>
+  <section id="contact" style="text-align:center; margin-bottom:50px;">
+    <h2 style="color:#2c3e50; margin-bottom:20px;">Connect with Me</h2>
+    <div class="social-links">
+      <a href="https://www.youtube.com/@Hersparklingqalb" target="_blank"><i class="fab fa-youtube fa-2x"></i></a>
+      <a href="https://www.instagram.com/hersparklinggqalb/" target="_blank"><i class="fab fa-instagram fa-2x"></i></a>
+      <a href="https://www.tumblr.com/blog/hersparklinggqalb" target="_blank"><i class="fab fa-tumblr fa-2x"></i></a>
+      <a href="https://in.pinterest.com/Hersparklinggqalb/" target="_blank"><i class="fab fa-pinterest fa-2x"></i></a>
+      <a href="https://www.reddit.com/user/FrontFaith74/" target="_blank"><i class="fab fa-reddit fa-2x"></i></a>
+      <a href="mailto:hersparklinggqalb@gmail.com"><i class="fas fa-envelope fa-2x"></i></a>
+    </div>
+  </section>
 
-  <footer>
-    &copy; 2025 Muj’s Reflections | Follow my journey
-  </footer>
+</div>
+
+<footer>
+  &copy; 2025 Muj’s Reflections | Follow my journey
+</footer>
 
 <script>
-// --- Populate All Blogs dynamically ---
-async function populateAllBlogs() {
+// --- Pagination & populate blogs ---
+let postsData = [];
+const postsPerPage = 5;
+let currentPage = 1;
+
+async function fetchPosts() {
   try {
     const res = await fetch("/reddit-posts");
     const data = await res.json();
-    const blogsContainer = document.querySelector("#blogs .posts");
-    blogsContainer.innerHTML = ""; // clear previous
-
-    data.data.children.forEach((post, index) => {
-      const { title, permalink, selftext, created_utc } = post.data;
-      const date = new Date(created_utc * 1000).toLocaleDateString();
-
-      const postCard = document.createElement("div");
-      postCard.className = "post-card";
-
-      // Highlight first 3 posts
-      if (index < 3) postCard.classList.add("highlighted");
-
-      postCard.innerHTML = `
-        <h3><a href="https://reddit.com${permalink}" target="_blank">${title}</a></h3>
-        <p>${selftext ? selftext.slice(0, 120) + "..." : ""}</p>
-        <span>${date}</span>
-      `;
-      blogsContainer.appendChild(postCard);
-    });
+    postsData = data.data.children;
+    showPage(currentPage);
+    setupPagination();
   } catch (err) {
     console.error("Failed to load Reddit posts:", err);
   }
 }
 
-populateAllBlogs();
+function showPage(page) {
+  const blogsContainer = document.querySelector("#blogs .posts");
+  blogsContainer.innerHTML = "";
+  const start = (page - 1) * postsPerPage;
+  const end = start + postsPerPage;
+  const pagePosts = postsData.slice(start, end);
+
+  pagePosts.forEach(post => {
+    const { title, permalink, selftext, created_utc } = post.data;
+    const date = new Date(created_utc * 1000).toLocaleDateString();
+    const postCard = document.createElement("div");
+    postCard.className = "post-card";
+    postCard.innerHTML = `
+      <h3><a href="https://reddit.com${permalink}" target="_blank">${title}</a></h3>
+      <p>${selftext ? selftext.slice(0, 120) + "..." : ""}</p>
+      <span>${date}</span>
+    `;
+    blogsContainer.appendChild(postCard);
+  });
+}
+
+function setupPagination() {
+  const totalPages = Math.ceil(postsData.length / postsPerPage);
+  const pagination = document.getElementById("pagination");
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.style.margin = "0 5px";
+    btn.style.padding = "5px 10px";
+    btn.style.cursor = "pointer";
+    if (i === currentPage) btn.style.background = "#2c7a78"; btn.style.color = "#fff";
+    btn.addEventListener("click", () => {
+      currentPage = i;
+      showPage(currentPage);
+      setupPagination();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    pagination.appendChild(btn);
+  }
+}
+
+fetchPosts();
 </script>
 
 </body>
