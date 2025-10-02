@@ -188,7 +188,37 @@ async function fetchRedditPosts() {
   }
 }
 
+// Call it for the 🌸 My Latest Reflections section
 fetchRedditPosts();
+
+// --- Populate All Blogs dynamically ---
+async function populateAllBlogs() {
+  try {
+    const res = await fetch("/reddit-posts");
+    const data = await res.json();
+    const blogsContainer = document.querySelector("#blogs .posts");
+    blogsContainer.innerHTML = ""; // clear static cards
+
+    data.data.children.forEach(post => {
+      const { title, permalink, selftext, created_utc } = post.data;
+      const date = new Date(created_utc * 1000).toLocaleDateString();
+
+      const postCard = document.createElement("div");
+      postCard.className = "post-card";
+      postCard.innerHTML = `
+        <h3><a href="https://reddit.com${permalink}" target="_blank">${title}</a></h3>
+        <p>${selftext ? selftext.slice(0, 120) + "..." : ""}</p>
+        <span>${date}</span>
+      `;
+      blogsContainer.appendChild(postCard);
+    });
+  } catch (err) {
+    console.error("Failed to load Reddit posts for All Blogs:", err);
+  }
+}
+
+// Call it for the All Blogs section
+populateAllBlogs();
 </script>
 
 </body>
