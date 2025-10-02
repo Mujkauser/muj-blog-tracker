@@ -113,13 +113,6 @@
       <p>Every small act done sincerely for Him—sharing knowledge, spreading kindness, or lifting someone’s burden—is my way of striving for Jannah and fulfilling the purpose Allah <strong>(SWT)</strong> placed me on this earth for.</p>
     </section>
 
-    
-    </section>
-  <section id="reddit-posts">
-    <h2>🌸 My Latest Reflections on Reddit 🌸</h2>
-    <div id="posts-container">Loading posts...</div>
-  </section>
-
     <!-- All Blogs -->
     <section id="blogs">
       <h2 style="text-align:center; color:#d1495b; margin-bottom:25px;">All My Blogs</h2>
@@ -162,35 +155,6 @@
   </footer>
 
 <script>
-async function fetchRedditPosts() {
-  try {
-    const response = await fetch("/reddit-posts");
-    const data = await response.json();
-    const postsContainer = document.getElementById("posts-container");
-    postsContainer.innerHTML = "";
-
-    data.data.children.slice(0, 5).forEach(post => {
-      const { title, permalink, selftext, created_utc } = post.data;
-      const postElement = document.createElement("div");
-      postElement.classList.add("reddit-post");
-      const date = new Date(created_utc * 1000).toLocaleDateString();
-
-      postElement.innerHTML = `
-        <h3><a href="https://reddit.com${permalink}" target="_blank">${title}</a></h3>
-        <p class="date">${date}</p>
-        ${selftext ? `<p>${selftext.slice(0,120)}...</p>` : ""}
-      `;
-      postsContainer.appendChild(postElement);
-    });
-  } catch (err) {
-    console.error("Error fetching Reddit posts:", err);
-    document.getElementById("posts-container").innerText = "Could not load posts.";
-  }
-}
-
-// Call it for the 🌸 My Latest Reflections section
-fetchRedditPosts();
-
 // --- Populate All Blogs dynamically ---
 async function populateAllBlogs() {
   try {
