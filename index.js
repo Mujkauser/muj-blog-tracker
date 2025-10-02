@@ -66,32 +66,41 @@ let redditPosts = [];
 app.get("/reddit-posts", async (req, res) => {
   try {
     const token = await getToken();
-    const response = await fetch(`https://oauth.reddit.com/user/${REDDIT_USERNAME}/submitted`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "User-Agent": USER_AGENT
+    let allPosts = [];
+    let after = null;
+
+    do {
+      const url = new URL(`https://oauth.reddit.com/user/${REDDIT_USERNAME}/submitted`);
+      url.searchParams.set("limit", "100");
+      if (after) url.searchParams.set("after", after);
+
+      const response = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "User-Agent": USER_AGENT
+        }
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        return res.status(response.status).json({ error: text });
       }
-    });
 
-    if (!response.ok) {
-      const text = await response.text();
-      return res.status(response.status).json({ error: text });
-    }
+      const json = await response.json();
+      allPosts = allPosts.concat(json.data.children);
+      after = json.data.after; // for next page
+    } while (after);
 
-    const posts = await response.json();
-
-    // Save posts for admin moderation
-    redditPosts = posts.data.children.map(p => ({
-      title: p.data.title,
-      permalink: p.data.permalink,
-      selftext: p.data.selftext,
-      created_utc: p.data.created_utc
-    }));
-
-    // Wrap in data.children to mimic old Reddit API format for frontend
     const formattedPosts = {
       data: {
-        children: redditPosts.map(p => ({ data: p }))
+        children: allPosts.map(p => ({
+          data: {
+            title: p.data.title,
+            permalink: p.data.permalink,
+            selftext: p.data.selftext,
+            created_utc: p.data.created_utc
+          }
+        }))
       }
     };
 
@@ -188,6 +197,7 @@ app.get("/admin/delete-post/:id", (req, res) => {
 
 // --- Start server ---
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 
 
