@@ -106,6 +106,13 @@ app.get("/admin", (req, res) => {
   `);
 });
 
+// --- Admin logs page ---
+app.get("/admin/logs", (req, res) => {
+  if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
+  res.send(JSON.stringify(pageviews, null, 2)); // simple example
+});
+
+
 // --- Analytics page ---
 app.get("/admin/analytics", (req, res) => {
   if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
@@ -151,3 +158,4 @@ app.get("/admin/delete-post/:id", (req, res) => {
 
 // --- Start server ---
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
