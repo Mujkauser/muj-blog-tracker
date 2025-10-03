@@ -41,125 +41,62 @@ if (fs.existsSync(logFile)) {
 
 // Visitor logging middleware
 app.use(async (req, res, next) => {
-  let ipList = (req.headers["x-forwarded-for"] || req.socket.remoteAddress).split(",").map(i => i.trim());
-
-  // Regex to detect private/internal IPs
-  const privateIP = /^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\.|^127\./;
-
-  // Pick first public IP if available
-  let publicIP = ipList.find(ip => !privateIP.test(ip)) || ipList[0] || "Unknown";
-
-  // Increment pageviews
-  pageviews[req.path] = (pageviews[req.path] || 0) + 1;
-
-  // Geo lookup
-  let location = "Unknown", lat = null, lon = null;
-  if (publicIP !== "Unknown") {
-    try {
-      const geoResp = await fetch(`https://ipapi.co/${publicIP}/json/`);
-      if (geoResp.ok) {
-        const geo = await geoResp.json();
-        if (geo && geo.city && geo.country_name) {
-          location = `${geo.city}, ${geo.country_name}`;
-        }
-        lat = geo.latitude || null;
-        lon = geo.longitude || null;
-      }
-    } catch (err) {
-      console.error("Geo lookup failed:", err);
-    }
-  }
-
-  const visitor = {
-    path: req.path,
-    ip: ipList.join(", "),  // keep full chain for logs
-    publicIP,
-    location,
-    lat,
-    lon,
-    utcTime: new Date().toISOString(),
-    istTime: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-    estTime: new Date().toLocaleString("en-US", { timeZone: "America/New_York" })
-  };
-
-  visitorLogs.push(visitor);
-  fs.writeFileSync(logFile, JSON.stringify(visitorLogs, null, 2));
-
-  next();
-});
-
-// --- Reddit token handling ---
-let accessToken = "";
-let tokenExpiry = 0;
-
-async function getToken() {
-  const now = Date.now();
-  if (accessToken && now < tokenExpiry) return accessToken;
-
-  const resp = await fetch("https://www.reddit.com/api/v1/access_token", {
-    method: "POST",
-    headers: {
-      "Authorization": "Basic " + Buffer.from(`${CLIENT_ID}:${SECRET}`).toString("base64"),
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials"
-  });
-
-  const data = await resp.json();
-  accessToken = data.access_token;
-  tokenExpiry = now + (data.expires_in - 60) * 1000; // 60s buffer
-  return accessToken;
-}
-
-// --- Reddit posts route ---
-let redditPosts = [];
-
-app.get("/reddit-posts", async (req, res) => {
   try {
-    const token = await getToken();
-    let allPosts = [];
-    let after = null;
+    // 1. Grab IPs
+    const raw = req.headers["cf-connecting-ip"] || req.headers["x-forwarded-for"] || req.socket.remoteAddress || "";
+    const ipList = raw.split(",").map(i => i.trim()).filter(Boolean);
 
-    do {
-      const url = new URL(`https://oauth.reddit.com/user/${REDDIT_USERNAME}/submitted`);
-      url.searchParams.set("limit", "100");
-      if (after) url.searchParams.set("after", after);
+    // 2. Normalize IPv6-mapped IPv4 (::ffff:1.2.3.4 → 1.2.3.4)
+    function normalize(ip) {
+      return ip.replace(/^::ffff:/, "");
+    }
 
-      const response = await fetch(url, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "User-Agent": USER_AGENT
-        }
-      });
+    // 3. Filter out private/local IPs
+    const privatePattern = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.|127\.|::1)/;
+    let publicIP = ipList.map(normalize).find(ip => !privatePattern.test(ip)) || "Unknown";
 
-      if (!response.ok) {
-        const text = await response.text();
-        return res.status(response.status).json({ error: text });
-      }
-
-      const json = await response.json();
-      allPosts = allPosts.concat(json.data.children);
-      after = json.data.after;
-    } while (after);
-
-    const formattedPosts = {
-      data: {
-        children: allPosts.map(p => ({
-          data: {
-            title: p.data.title,
-            permalink: p.data.permalink,
-            selftext: p.data.selftext,
-            created_utc: p.data.created_utc
+    // 4. Geo lookup
+    let location = "Unknown", lat = null, lon = null;
+    if (publicIP !== "Unknown") {
+      try {
+        const geoResp = await fetch(`https://ipapi.co/${publicIP}/json/`);
+        if (geoResp.ok) {
+          const geo = await geoResp.json();
+          if (!geo.error && (geo.city || geo.country_name)) {
+            location = `${geo.city || ""}${geo.city && geo.country_name ? ", " : ""}${geo.country_name || ""}`;
+            lat = geo.latitude || null;
+            lon = geo.longitude || null;
           }
-        }))
+        }
+      } catch (err) {
+        console.error("Geo lookup failed:", err);
       }
+    }
+
+    // 5. Build visitor object
+    const visitor = {
+      path: req.path,
+      ip: ipList.join(", "),
+      publicIP,
+      location,
+      lat,
+      lon,
+      utcTime: new Date().toISOString(),
+      istTime: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      estTime: new Date().toLocaleString("en-US", { timeZone: "America/New_York" }),
+      ua: req.headers["user-agent"] || ""
     };
 
-    redditPosts = formattedPosts.data.children;
-    res.json(formattedPosts);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Could not fetch Reddit posts" });
+    // 6. Save logs
+    visitorLogs.push(visitor);
+    fs.writeFileSync(logFile, JSON.stringify(visitorLogs, null, 2));
+
+    // 7. Increment pageviews
+    pageviews[req.path] = (pageviews[req.path] || 0) + 1;
+  } catch (e) {
+    console.error("Visitor logging error:", e);
+  } finally {
+    next();
   }
 });
 
