@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import fs from "fs";
 
 dotenv.config();
 
@@ -12,13 +13,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Reddit app credentials
+// Reddit credentials
 const CLIENT_ID = process.env.REDDIT_CLIENT_ID;
 const SECRET = process.env.REDDIT_SECRET;
 const USER_AGENT = "hersparklingqalb-blog/0.1 by FrontFaith74";
 const REDDIT_USERNAME = "FrontFaith74";
 
-// Admin secret
+// Admin key
 const ADMIN_KEY = process.env.ADMIN_KEY;
 
 if (!CLIENT_ID || !SECRET || !ADMIN_KEY) {
@@ -29,11 +30,48 @@ if (!CLIENT_ID || !SECRET || !ADMIN_KEY) {
 // Serve static frontend
 app.use(express.static(path.join(__dirname, "public")));
 
-// --- Visitor analytics (in-memory) ---
-const pageviews = {};
+// --- Visitor analytics (persistent logs + pageviews) ---
+const logFile = "./logs.json";
+let visitorLogs = [];
+let pageviews = {};
 
-app.use((req, res, next) => {
+if (fs.existsSync(logFile)) {
+  visitorLogs = JSON.parse(fs.readFileSync(logFile, "utf-8"));
+  // rebuild pageviews from logs
+  visitorLogs.forEach(v => {
+    pageviews[v.path] = (pageviews[v.path] || 0) + 1;
+  });
+}
+
+// Visitor logging middleware
+app.use(async (req, res, next) => {
+  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+
+  let location = "Unknown";
+  try {
+    const geoResp = await fetch(`https://ipapi.co/${ip}/json/`);
+    if (geoResp.ok) {
+      const geo = await geoResp.json();
+      if (geo && geo.city && geo.country_name) {
+        location = `${geo.city}, ${geo.country_name}`;
+      }
+    }
+  } catch (err) {
+    console.error("Geo lookup failed:", err);
+  }
+
+  const visitor = {
+    path: req.path,
+    ip,
+    location,
+    time: new Date().toISOString()
+  };
+
+  visitorLogs.push(visitor);
   pageviews[req.path] = (pageviews[req.path] || 0) + 1;
+
+  fs.writeFileSync(logFile, JSON.stringify(visitorLogs, null, 2));
+
   next();
 });
 
@@ -88,7 +126,7 @@ app.get("/reddit-posts", async (req, res) => {
 
       const json = await response.json();
       allPosts = allPosts.concat(json.data.children);
-      after = json.data.after; // for next page
+      after = json.data.after;
     } while (after);
 
     const formattedPosts = {
@@ -104,7 +142,7 @@ app.get("/reddit-posts", async (req, res) => {
       }
     };
 
-    redditPosts = formattedPosts.data.children; // <-- populate moderation array
+    redditPosts = formattedPosts.data.children;
     res.json(formattedPosts);
   } catch (err) {
     console.error(err);
@@ -121,6 +159,7 @@ app.get("/admin", (req, res) => {
     <ul>
       <li><a href="/reddit-posts">View Reddit Posts</a></li>
       <li><a href="/admin/analytics">View Visitor Analytics</a></li>
+      <li><a href="/admin/logs">View Visitor Logs</a></li>
       <li><a href="/admin/moderation">Moderate Posts</a></li>
     </ul>
   `);
@@ -130,8 +169,8 @@ app.get("/admin", (req, res) => {
 app.get("/admin/logs", (req, res) => {
   if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
 
-  const rows = Object.entries(pageviews)
-    .map(([path, count]) => `<tr><td>${path}</td><td>${count}</td></tr>`)
+  const rows = visitorLogs
+    .map(v => `<tr><td>${v.path}</td><td>${v.ip}</td><td>${v.location}</td><td>${v.time}</td></tr>`)
     .join("");
 
   res.send(`
@@ -140,18 +179,18 @@ app.get("/admin/logs", (req, res) => {
       <thead>
         <tr>
           <th>Path</th>
-          <th>Pageviews</th>
+          <th>IP Address</th>
+          <th>Location</th>
+          <th>Time</th>
         </tr>
       </thead>
       <tbody>
-        ${rows || "<tr><td colspan='2'>No logs yet</td></tr>"}
+        ${rows || "<tr><td colspan='4'>No logs yet</td></tr>"}
       </tbody>
     </table>
     <p><a href="/admin?key=${ADMIN_KEY}">Back to Admin Dashboard</a></p>
   `);
 });
-
-
 
 // --- Analytics page ---
 app.get("/admin/analytics", (req, res) => {
@@ -167,8 +206,15 @@ app.get("/admin/analytics", (req, res) => {
     <script>
       const ctx = document.getElementById('analyticsChart').getContext('2d');
       const chart = new Chart(ctx, {
-          type: 'line',
-          data: { labels: ${JSON.stringify(labels)}, datasets: [{ label: 'Pageviews', data: ${JSON.stringify(data)} }] },
+          type: 'bar',
+          data: { 
+            labels: ${JSON.stringify(labels)}, 
+            datasets: [{ 
+              label: 'Pageviews', 
+              data: ${JSON.stringify(data)}, 
+              backgroundColor: 'rgba(75, 192, 192, 0.5)' 
+            }] 
+          },
       });
     </script>
   `);
@@ -198,7 +244,3 @@ app.get("/admin/delete-post/:id", (req, res) => {
 
 // --- Start server ---
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-
-
