@@ -41,25 +41,34 @@ if (fs.existsSync(logFile)) {
 
 // Visitor logging middleware
 app.use(async (req, res, next) => {
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+
+  // Pick first IP if multiple, trim spaces
+  if (ip.includes(",")) ip = ip.split(",")[0].trim();
+
+  // Skip internal/private IPs
+  const privateIP = /^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\./;
+  if (privateIP.test(ip)) ip = "Private/Internal IP";
 
   // Increment pageviews
   pageviews[req.path] = (pageviews[req.path] || 0) + 1;
 
   // Geo lookup
   let location = "Unknown", lat = null, lon = null;
-  try {
-    const geoResp = await fetch(`https://ipapi.co/${ip}/json/`);
-    if (geoResp.ok) {
-      const geo = await geoResp.json();
-      if (geo && geo.city && geo.country_name) {
-        location = `${geo.city}, ${geo.country_name}`;
+  if (ip !== "Private/Internal IP") {
+    try {
+      const geoResp = await fetch(`https://ipapi.co/${ip}/json/`);
+      if (geoResp.ok) {
+        const geo = await geoResp.json();
+        if (geo && geo.city && geo.country_name) {
+          location = `${geo.city}, ${geo.country_name}`;
+        }
+        lat = geo.latitude || null;
+        lon = geo.longitude || null;
       }
-      lat = geo.latitude || null;
-      lon = geo.longitude || null;
+    } catch (err) {
+      console.error("Geo lookup failed:", err);
     }
-  } catch (err) {
-    console.error("Geo lookup failed:", err);
   }
 
   const visitor = {
