@@ -42,12 +42,8 @@ if (fs.existsSync(logFile)) {
   });
 }
 
-// visitor logging with IST & ET
+// Visitor logging with timezones
 app.use(async (req, res, next) => {
-  // --- Pageviews ---
-  pageviews[req.path] = (pageviews[req.path] || 0) + 1;
-
-  // --- Visitor logging ---
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
   // Lookup location
@@ -64,19 +60,19 @@ app.use(async (req, res, next) => {
     console.error("Geo lookup failed:", err);
   }
 
-  // Get times in IST and US Eastern Time
-  const istTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
-  const estTime = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
-
+  const now = new Date();
   const visitor = {
     path: req.path,
     ip,
     location,
-    istTime,
-    estTime
+    time_utc: now.toISOString(),
+    time_ist: now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+    time_est: now.toLocaleString("en-US", { timeZone: "America/New_York" })
   };
 
   visitorLogs.push(visitor);
+
+  // Save to JSON file
   fs.writeFileSync(logFile, JSON.stringify(visitorLogs, null, 2));
 
   next();
@@ -177,7 +173,16 @@ app.get("/admin/logs", (req, res) => {
   if (req.query.key !== ADMIN_KEY) return res.send("Unauthorized");
 
   const rows = visitorLogs
-    .map(v => `<tr><td>${v.path}</td><td>${v.ip}</td><td>${v.location}</td><td>${v.time}</td></tr>`)
+    .map(v => `
+      <tr>
+        <td>${v.path}</td>
+        <td>${v.ip}</td>
+        <td>${v.location}</td>
+        <td>${v.time_utc || 'N/A'}</td>
+        <td>${v.time_ist || 'N/A'}</td>
+        <td>${v.time_est || 'N/A'}</td>
+      </tr>
+    `)
     .join("");
 
   res.send(`
@@ -188,11 +193,13 @@ app.get("/admin/logs", (req, res) => {
           <th>Path</th>
           <th>IP Address</th>
           <th>Location</th>
-          <th>Time</th>
+          <th>UTC Time</th>
+          <th>IST Time</th>
+          <th>EST Time</th>
         </tr>
       </thead>
       <tbody>
-        ${rows || "<tr><td colspan='4'>No logs yet</td></tr>"}
+        ${rows || "<tr><td colspan='6'>No logs yet</td></tr>"}
       </tbody>
     </table>
     <p><a href="/admin?key=${ADMIN_KEY}">Back to Admin Dashboard</a></p>
