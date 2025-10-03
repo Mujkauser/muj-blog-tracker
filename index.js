@@ -33,8 +33,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // --- Visitor analytics (persistent logs + pageviews) ---
 const logFile = "./logs.json";
 let visitorLogs = [];
-let pageviews = {};
-
+const pageviews = {};
 if (fs.existsSync(logFile)) {
   visitorLogs = JSON.parse(fs.readFileSync(logFile, "utf-8"));
   // rebuild pageviews from logs
@@ -43,10 +42,15 @@ if (fs.existsSync(logFile)) {
   });
 }
 
-// Visitor logging middleware
+// visitor logging with IST & ET
 app.use(async (req, res, next) => {
+  // --- Pageviews ---
+  pageviews[req.path] = (pageviews[req.path] || 0) + 1;
+
+  // --- Visitor logging ---
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
+  // Lookup location
   let location = "Unknown";
   try {
     const geoResp = await fetch(`https://ipapi.co/${ip}/json/`);
@@ -60,16 +64,19 @@ app.use(async (req, res, next) => {
     console.error("Geo lookup failed:", err);
   }
 
+  // Get times in IST and US Eastern Time
+  const istTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const estTime = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+
   const visitor = {
     path: req.path,
     ip,
     location,
-    time: new Date().toISOString()
+    istTime,
+    estTime
   };
 
   visitorLogs.push(visitor);
-  pageviews[req.path] = (pageviews[req.path] || 0) + 1;
-
   fs.writeFileSync(logFile, JSON.stringify(visitorLogs, null, 2));
 
   next();
