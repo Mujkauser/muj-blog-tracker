@@ -161,9 +161,9 @@ app.get("/admin", (req, res) => {
     <h1>Admin Dashboard</h1>
     <ul>
       <li><a href="/reddit-posts">View Reddit Posts</a></li>
-      <li><a href="/admin/analytics">View Visitor Analytics</a></li>
-      <li><a href="/admin/logs">View Visitor Logs</a></li>
-      <li><a href="/admin/moderation">Moderate Posts</a></li>
+      <li><a href="/admin/analytics?key=${ADMIN_KEY}">View Visitor Analytics</a></li>
+      <li><a href="/admin/logs?key=${ADMIN_KEY}">View Visitor Logs</a></li>
+      <li><a href="/admin/moderation?key=${ADMIN_KEY}">Moderate Posts</a></li>
     </ul>
   `);
 });
