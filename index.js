@@ -41,23 +41,22 @@ if (fs.existsSync(logFile)) {
 
 // Visitor logging middleware
 app.use(async (req, res, next) => {
-  let ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  let ipList = (req.headers["x-forwarded-for"] || req.socket.remoteAddress).split(",").map(i => i.trim());
 
-  // Pick first IP if multiple, trim spaces
-  if (ip.includes(",")) ip = ip.split(",")[0].trim();
+  // Regex to detect private/internal IPs
+  const privateIP = /^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\.|^127\./;
 
-  // Skip internal/private IPs
-  const privateIP = /^10\.|^172\.(1[6-9]|2[0-9]|3[0-1])\.|^192\.168\./;
-  if (privateIP.test(ip)) ip = "Private/Internal IP";
+  // Pick first public IP if available
+  let publicIP = ipList.find(ip => !privateIP.test(ip)) || ipList[0] || "Unknown";
 
   // Increment pageviews
   pageviews[req.path] = (pageviews[req.path] || 0) + 1;
 
   // Geo lookup
   let location = "Unknown", lat = null, lon = null;
-  if (ip !== "Private/Internal IP") {
+  if (publicIP !== "Unknown") {
     try {
-      const geoResp = await fetch(`https://ipapi.co/${ip}/json/`);
+      const geoResp = await fetch(`https://ipapi.co/${publicIP}/json/`);
       if (geoResp.ok) {
         const geo = await geoResp.json();
         if (geo && geo.city && geo.country_name) {
@@ -73,7 +72,8 @@ app.use(async (req, res, next) => {
 
   const visitor = {
     path: req.path,
-    ip,
+    ip: ipList.join(", "),  // keep full chain for logs
+    publicIP,
     location,
     lat,
     lon,
